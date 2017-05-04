@@ -1,0 +1,13 @@
+{
+  "name": "lodash-is-awesome",
+  "version": "0.0.5",
+  "repository": "https://github.com/mpi/lodash-is-awesome",
+  "license": "MIT",
+  "author": {
+    "name": "Michał Piotrkowski"
+  },
+  "scripts": {},
+  "dependencies": {
+    "lodash": "^4.17.4"
+  }
+}
