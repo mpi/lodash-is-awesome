@@ -531,7 +531,7 @@ function customizer(val, op){
 // general-purpose, higher-order functions:
 
 var patch = recipe => _.mergeWith(customizer, _, recipe);
-var matches = _.isMatchWith(customizerRegExp);
+var matches = _.isMatchWith(customizer);
 var forAll = _.map;
 var removeIf = _.reject;
 var toggle = _.negate(_.identity);
@@ -594,7 +594,7 @@ console.log(program({items: []}));
 ```
 
 You can also find full listing in my [Github repo](http://github.com/mpi/lodash-is-awesome/) or
-play around with it at this [JS Fiddle]().
+play around with it at this [JS Fiddle](https://jsfiddle.net/67bdchwg/1/).
 
 # Summary
 TBD
