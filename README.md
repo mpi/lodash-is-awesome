@@ -20,15 +20,16 @@ _(cities)
 But Lodash is much more than list manipulation library.
 In this post I would like to shed a light at some less popular, yet in my opinion, extremely useful Lodash features.
 
-**Disclaimer**: this article isn't a introduction to Lodash nor detailed guide to it's function.
-If you do not familiar with some of functions that are used in following examples or you don't know Lodash at all,
+**Disclaimer**: this article is neither a introduction to Lodash nor detailed guide to it's function.
+If you are not familiar with some of functions that are used in following examples or you don't know Lodash at all,
 official documentation page is an excellent source of information.
 
 ## Higher-Order functions
 
 In order to better understand power of Lodash, we have to understand concept of **higher-order functions**. 
 
-Higher-order function are functions that accept (as parameters) and/or return other functions.
+> **Higher-order function** are functions that accept (as parameters) and/or return other functions.
+
 Let's take a look at a simple function:
 
 ```javascript
@@ -56,9 +57,9 @@ Now we can quickly double values like this:
 What we see here is a classical function delegation (one function delegates to another).
 
 Yet, there is another, more functional, way to accomplish similar result (reuse of function code).
-<!--
-(make function that inverts value given function that divides two values)
--->
+
+### Partial
+
 It is known as partial application. Witch parial application we can create `dbl()` function in following way:
 ```javascript
 var dbl = partial(mul, 2);
