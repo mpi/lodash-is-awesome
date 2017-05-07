@@ -1,18 +1,20 @@
 # Higher-order functions in Lodash
 
 In this article I would like to explain concept of higher-order functions and
-how they are present in my favorite Javascript library: Lodash.
+how they are omni-present in my favorite Javascript library: Lodash.
 
-
+<!--
 **Disclaimer**: this article has been extracted from a longer article about Lodash. If you are already
                 familiar with concept of **higher-order functions** and functions like `_.partial()` and
                 `_.merge()` you might be interested in [this](README.md) article.
+-->
 
-**Higher-order functions** are great way of making code more flexible and reusable as well as making code more declarative.
 
 <!--In order to better understand power of Lodash, we have to understand concept of **higher-order functions**. -->
 
-Let's take a look at a simple example. We will define function that multiplies two values:
+**Higher-order functions** are great way of making code more flexible and reusable as well as making code more declarative,
+but before we we jump to the definition let's take a look at a simple example.
+We will define function that multiplies two values:
 
 ```javascript
 function multiply(a, b){
@@ -31,7 +33,7 @@ function double(v){
   return multiply(v, 2);
 }
 ```
-Now we can easily double values like this:
+Now we can easily double values:
 ```javascript
 > double(5)
 < 10
@@ -48,12 +50,12 @@ It is known as **partial function application**.
 According to [Wikipedia](https://en.wikipedia.org/wiki/Partial_application):
 > **partial function application** *[...]* refers to the process of fixing a number of arguments to a function, producing another function of smaller arity.
 
-With partial application we can create `double()` function in following way:
+With partial application we can create `double()` function in a following way:
 ```javascript
 var double = partial(mul, 2);
 ```
 Partial takes function passed as first parameter, binds some of it's parameters to a fixed value and returns new function with reduced arity (number of parameters).
-Let's imagine how implementation of partial in JavaScript could look like.
+Let's speculate how implementation of partial in JavaScript could look like.
 ```javascript
 function partial(fn) {
   var fixed = [].slice.apply(arguments, [1]); /* 1 */
@@ -69,7 +71,7 @@ This Vanilla JS implementation is simplistic yet powerfull.
 
 Notice ugly invocations of `slice.apply()`. They are neceseary because `arguments` object in JavaScript is not a real array, therefore it doesn't have `slice` method, so we use `Function.prototype.apply()`.
 
-If we have used ECMAScript 2015 (ES6), we could simplify code thanks to [*rest operator*](https://developer.mozilla.org/pl/docs/Web/JavaScript/Reference/Functions/rest_parameters):
+If we have used ECMAScript 2015 (ES6), we could simplify code by using [*rest operator*](https://developer.mozilla.org/pl/docs/Web/JavaScript/Reference/Functions/rest_parameters):
 ```javascript
 function partial(fn, ...args) {
   return function(...newArgs) {
@@ -78,7 +80,7 @@ function partial(fn, ...args) {
 }
 ```
 However, if we want to stick to ES 5, we can rewrite this function and already benefit from using Lodash.
-This is because Lodash also accepts `arguments` as a function parameter wherever array parameter is expected.
+This is because Lodash accepts `arguments` as a function parameter wherever array parameter is expected.
 You can also easily convert any array-like object to actual array using [`_.toArray()`][toArray].
 Our enhanced implementation would look like this:
 ```javascript
@@ -106,9 +108,9 @@ var half = _.partial(divide, 2);
 > half(4);
 < 0.5
 ```
-... as you can see it returns invalid results.
+... returns, as you can see, invalid results.
 
-This happens, because earlier, order of parameters was irrelevant (because multiplication is [commutative](https://en.wikipedia.org/wiki/Commutative_property)).
+This happens, because earlier order of parameters was irrelevant (multiplication is [commutative](https://en.wikipedia.org/wiki/Commutative_property)).
 Now we need to fix second parameter and leave first parameter *loose*. We cannot do it with our naive implementation, but fortunately authors of Lodash took it into consideration and provided a solution for such cases.
 In Lodash we can *skip* parameter binding using a *placeholder* like this:
 ```javascript
@@ -125,7 +127,7 @@ This way we created two new functions one that halves and the other that inverts
 
 ## Curring
 
-Lodash offers one more function similar to `_.partial()`. This function is [`_.curry()`][curry]. Let's give it a spin:
+Lodash offers one more function similar to `_.partial()`. This function is [`_.curry()`][curry]. Let's give it a try:
 
 ```javascript
 > var divideC = _.curry(divide);
@@ -218,7 +220,7 @@ _(cities)
 Alternatively, we could define as `var greatherThan = _.curryRight(_.gte)`.
 `_.curryRight()` is similar to `_.curry()` but it binds parameters in reverse order (starting from the last one).
 
-Furthermore, Lodash for functions that accept `iteratee` argument (functions like `_.map()`, `_.countBy()`, `_.groupBy()`, ...) automatically wraps `iteratee` argument with `_.iteratee()` function, which in order for string parameters delegates to `_.property()` function.
+Furthermore, for functions that accept `iteratee` argument (functions like `_.map()`, `_.countBy()`, `_.groupBy()`, ...), Lodash automatically wraps `iteratee` argument with `_.iteratee()` function, which in order for string parameters delegates to `_.property()` function.
 Therefore, code can be shortened even further:
 
 ```javascript
@@ -266,6 +268,9 @@ _.flow([
   _.take(5)
 ])(cities);
 ```
+As you can see, there is no more `_.curry()` invocations as functions are curried by default.
+`_.chain()` invocation has been replaced with `_.flow()` and cities parameter is passed at the end.
+If we would saved result of `_.flow()` to a variable, then we could reuse it for different cities dataset.
 
 # Summary
 
