@@ -1,6 +1,6 @@
 # Lodash is Awesome!
 
-In this article I would like to share with you my appreciation for one of my favorite library.
+In this article I would like to share with you my appreciation for one of my favorite Javascript library.
 This library is Lodash.
 Most of people know Lodash from constructs like this:
 
@@ -20,208 +20,36 @@ _(cities)
 But Lodash is much more than list manipulation library.
 In this post I would like to shed a light at some less popular, yet in my opinion, extremely useful Lodash features.
 
+<!--
 **Disclaimer**: this article is neither a introduction to Lodash nor detailed guide to it's function.
 If you are not familiar with some of functions that are used in following examples or you don't know Lodash at all,
-official documentation page is an excellent source of information.
+[official documentation page](https://lodash.com/docs) is an excellent source of information.
+-->
 
-## Higher-Order functions
-
-In order to better understand power of Lodash, we have to understand concept of **higher-order functions**. 
-
-> **Higher-order function** are functions that accept (as parameters) and/or return other functions.
-
-Let's take a look at a simple function:
-
-```javascript
-function mul(a, b){
-  return a * b;
-}
-```
-Let's play a little bit with this function:
-
-```javascript
-> mul(21, 2)
-< 42
-```
-Suppose we often use this function to double a given value. We can create then new helper function like this:
-```javascript
-function dbl(v){
-  return mul(v, 2);
-}
-```
-Now we can quickly double values like this:
-```javascript
-> dbl(5)
-< 10
-```
-What we see here is a classical function delegation (one function delegates to another).
-
-Yet, there is another, more functional, way to accomplish similar result (reuse of function code).
-
-### Partial
-
-It is known as partial application. Witch parial application we can create `dbl()` function in following way:
-```javascript
-var dbl = partial(mul, 2);
-```
-Partial takes function passed as first parameter, binds some of it's parameters to a fixed value and returns new function with reduced arity (number of parameters).
-Parial is great example of higher-order function as it both accepts and returns function.
-Let's imagine how implementation of partial in JavaScript could look like.
-```javascript
-function partial(fn) {
-  var fixed = [].slice.apply(arguments, [1]);
-  return function() {
-    var args = fixed.concat([].slice.apply(arguments));
-    return fn.apply(this, args);
-  };
-}
-```
-Our function takes and stores in local variable (`fixed`) all except first parameters then returns new function that calls our original function `fn` with parameter list prepended with parameters stored in `fixed` variable.
-This Vanilla JS implementation is simplistic yet powerfull.
-
-Notice ugly invocations of `slice.apply()`. They are neceseary because `arguments` object in JavaScript is not a real array, therefore it doesn't have `slice` method, so we use `Function.prototype.apply()`.
-
-We can rewrite this function and already benefit from using Lodash.
-This is because Lodash also accepts `arguments` as a function parameter wherever array parameter is expected.
-You can also easily convert any array-like object to actual array using `_.toArray()`.
-Our enhanced implementation would look like this:
-```javascript
-function partial(fn) {
-  var bound = _.tail(arguments);
-  return function() {
-    var args = _.concat(bound, arguments);
-    return fn.apply(this, args);
-  };
-}
-```
-But we don't have to write our own implementation of `partial`, as Lodash already has it: `_.partial()`, and as you will see in next example, it is much more powerful than this simplistic one.
-
-Let's say we have a `div()` function that divides numbers, defined as:
-```javascript
-function div(a, b){
-  return a / b;
-}
-```
-Now we would like to reuse our `div(a, b)` function to create a new `half(n)` function that divides given number by half, just as we did in our previous scenario. At first glance it is similar to our `mul`/`dbl` scenario. But earlier, order of parameters was irrelevant. Now we need to fix second parameter and leave first parameter *loose*. We cannot do it with our naive implementation, but fortunately authors of Lodash took it into consideration and provided a solution for such cases.
-In Lodash we can *skip* parameter binding using a *placeholder* like this:
-```javascript
-var half = _.partial(div, _, 2);
-var inv = _.partial(div, 1);
-```
-This way we created two new functions one that halves and the other that inverts:
-```javascript
-> half(5);
-< 2.5
-> inv(5);
-< 0.2
-```
-
-### Curring
-
-Lodash offers one more function similar to `_.partial()`. This function is `_.curry()`. Let's give it a spin:
-
-```javascript
-> var divC = _.curry(div);
-> divC(4, 2)
-< 2
-> divC(4)(2)
-< 2
-> divC(4)
-< [Function]
-> var half = divC(_, 2);
-> half(4)
-< 2
-```
-After transforming function with `_.curry()` we get a brand new function that will accumulate and fix parameters from subsequent invocations until all expected parameters are specified, in which case original function is invoked.
-Parameters can be specified one-by-one or in batches.
-As you can see you can also *skip* parameters using `_` placeholder.
-
-### Limitations of `_.curry()`
-
-`_.curry()` is more powerful than `_.partial()` but it also has some limitations. Take a look at following example:
-
-```javascript
-> var parseIntC = _.curry(parseInt);
-> parseInt('123')
-< 123
-> parseIntC('123')
-< [Function]
-> parseIntC('123')(10)
-< 123
-```
-What happened here? Well, `parseInt(string, radix=10)` has second, optional argument. Lodash cannot tell what is actual arity of function, and will assume arity based on `Function.prototype.length` property which is equal to number of parameters specified in function declaration.
-Similar case applies to situation when function accepts variable number of parameters using `arguments` object (a.k.a variadic parameters).
-This can lead to very unexpected and error-prone behavior.
-In such cases it is recommended to provide correct arity of function when curring:
-```javascript
-> var parseIntC = _.curry(parseInt, 1);
-> parseIntC('123')
-< 123
-```
-
-## `_.partial() and _.curry()` in action
-
-Let's use `_.partial()` and `_.curry()` to rewrite our initial example:
-
-```javascript
-var gte = v => _.partial(_.gte, _, v);
-var zipObject = _.curry(_.zipObject);
-
-var countriesWithLargestCities = _(cities)
-  .filter(_.conforms({ population: gte(5000000) }))
-  .countBy('country')
-  .toPairs()
-  .map(zipObject(['country', 'numOfCities']))
-  .orderBy('numOfCities', 'desc')
-  .take(5)
-  .value();
-```
-
-Alternatively, we could define `var gte = _.curryRight(_.gte)`.
-`_.curryRight()` is similar to `_.curry()` but it binds parameters in reverse order (starting from the last one).
-
-## Lodash/fp
-
-Once I got used to use `_.curry()` and `_.partial()` on daily basis I've noticed that most of the time I `curry` most of the functions.
-Moreover, most of the time I skipped first parameter (or use `*Right()` variant of aforementioned functions).
-
-Then I stumbled upon `lodash/fp` variant of Lodash, which
-> promotes a more functional programming (FP) friendly style by exporting an instance of lodash with its methods wrapped to produce immutable auto-curried iteratee-first data-last methods.
-
-`Lodash/fp` basically introduces following changes:
-1. **curried** functions - all functions are curried by default,
-2. **fixed** arity - all functions have fixed arity, so they don't pose problems (as shown before) with curring. Any functions that have optional parameters are split to 2 separate functions (e.g. `_.curry(fn, arity?)` is split into `_.curry(fn)` and `_.curryN(fn, arity)`),
-3. **rearanged** parameters - functions parameters are re-aranged so data is expected as a last parameter, because in real life usecases you most of the time want to fix iteratee parameters and leave data parameters *open*,
-4. **immutable** parameters - functions no longer mutate passed parameters,
-5. **capped** iteratee callbacks - have arity caped to 1, so they don't pose problems with curring (see 2.),
-6. no more **chaining** - function chaining using `_.chain()` or `_()` is no longer supported. Instead `_.flow()` can be used.
-
-For more details and motivation for each individual change go to Lodash FP guide.
-In short all of those changes together result in much more declarative, error-prone and boilerplate-free code.
-
-Once again our example rewritten to `lodash/fp` style would look like this:
-```javascript
-_.flow([
-  _.filter(_.conforms({ population: _.gte(_, 5000000) })),
-  _.countBy('country'),
-  _.toPairs,
-  _.map(_.zipObject(['country', 'numOfCities'])),
-  _.orderBy('numOfCities', 'desc'),
-  _.take(5)
-])(cities);
-```
+**Disclaimer**: This article assumes that the reader is familiar with concept of **higher-order functions** and knows how functions like `_.curry()` and `_.partial()` works.
+Moreover, in this article when I refer to *"Lodash"* I mean `lodash/fp` variant of Lodash.
+If you haven't heard about `lodash/fp`, higher-order functions or just need some refresh of your memory, please have a look at my previous article on [Higher-order functions in Lodash](HIGHER_ORDER_FUNCTIONS.md).
 
 ## Lodash is not only for list manipulation
 
+<!--
 In the begining of article I asserted that Lodash is not only list manipulation library, so lets leave last example behind and move forward to something more interesting.
+-->
 
-**Disclaimer**: from now on I will refer to and use only functions from `lodash/fp` module.
+One of the things I love in Lodash is that it is extremely flexible and adaptable.
+Event if you don't find function that you need, there is a high chance that you can build one with just a few lines of code.
+Author of Lodash placed throughout it's codebase hooks and extension points that allows further customizations.
+One form of such extension points are **Customizers**.
 
-### `_.merge()` and `_.mergeWith()`
+## Customizers
 
-Before we jump to more complicated example lets explore `_.merge()` function.
+**Customizers** are similar to Object-Oriented [*Strategy pattern*](https://en.wikipedia.org/wiki/Strategy_pattern) from GoF Design Patterns book.
+You can vastly change object behavior by substituting one strategy to another.  
+<!--Before we jump to more complicated example lets explore `_.merge()` function.-->
+Let's have a look at how customizers works in practice.
+Suppose we have a partial contact information, that we would like to combine into one object:
 ```javascript
-var concact1 = {
+var contact1 = {
   name: 'Sherlock Holmes',
   phone: ['555-123-456']
 };
@@ -236,14 +64,16 @@ _.merge(concact1, concact2);
 <   phone: ['555-654-321']
 < }
 ```
-As you might expect `_.merge()` function merges two objects. If given property is present in both merged objects property from last object wins.
-In our example it is unfortunate, as we loose info about one of the contact's phone number.
-Fortunately there is an alternative version of `_.merge()` that accepts an additional function which can customize a way in which properties are merged. Let's give it a try:
+As you might expect `_.merge()` function does the job for us and merges two objects.
+However, if same property is present in both merged objects property value from last object wins.
+In our example it is unfortunate, as we loose information about one of the contact's phone number.
+Fortunately there is an alternative version of `_.merge()` that accepts an additional function which allows to customize a way in which properties are merged.
+Let's give it a try:
 
 ```javascript
-function customizer(a, b){
-  if(_.isArray(a)){
-    return _.concat(a, b);
+function customizer(src, dst){
+  if(_.isArray(src)){
+    return _.concat(src, dst);
   }
 }
 _.mergeWith(customizer, concact1, contact2);
@@ -253,14 +83,17 @@ _.mergeWith(customizer, concact1, contact2);
 <   phone: ['555-123-456', '555-654-321']
 < }
 ```
-**For experts**: Alternatively `customizer` can be written this way:
+**Bonus**: Alternatively `customizer` can be written this way:
 ```javascript
 var customizer = _.cond([[_.isArray, _.concat]]);
 ```
 
-`_.mergeWith()` is great example of Lodash power that comes from flexibility. Just with bunch of simple yet flexible building blocks and few lines of code you can build sophisticated constructs.
+If one of merged properties points to an array then our customizer returns a new array that will include values from both merged objects.
+Notice that if merged value is not an array our customizer won't return any value (or to put it in another way - it will return `undefined`).
+In such case Lodash will fallback to default strategy.
 
-But why should we stop on arrays concatanation?
+
+But why should we limit ourselves just to arrays concatanation?
 
 Here is how we can make our customizer even more generic:
 ```javascript
@@ -274,19 +107,28 @@ Now we will fix this customizer to as a first parameter of `_.mergeWith()`. Let'
 ```javascript
 var patch = recipe => _.mergeWith(customizer, _, recipe);
 ```
+Remember that all `lodash/fp` functions are auto-curried, so we can pass them subset of parameters, as well as,
+parameter placeholders `_` and in result we will get new function with some of the parameters fixed.
 
-The resulting `patch()` is a higher-order function that returns new function that transforms objects based on provided *recipe*. Recipes are formulated in a pretty declarative way.
+The resulting `patch()` is a higher-order function that returns new function that transforms objects based on provided *recipe*. Recipes are formulated in a pretty declarative way, by explicitly telling which function use to merge given property.
 
 **Note**: order of parameters in `_.mergeWith(customizer, object, source)` is a little bit unfortunate, as accepts data (`object`) parameter as a second and not last parameter.
 If it would be the other way we could fully benefit from curring and define `patch` simply as `var patch = _.mergeWith(customier)`.
 This order of parameters forced us to skip second of its parameter using `_`.
 Alternatively, we could re-arrange parameters like this:
 ```javascript
-var mergeWithRearg = _.rearg(_.mergeWith, [0, 2,1 ]);
+var mergeWithRearg = _.rearg(_.mergeWith, [0, 2, 1]);
 var patch = mergeWithRearg(customizer);
 ```
-
+or just:
+```javascript
+var patch = _.flip(_.mergeWith(customizer));
+```
+<!--
 Thanks to `lodash/fp` patch does not mutate parameters, but returns altered copy. Subsequent patches can be combined together using `_.flow()` function.
+-->
+
+Now we can create *patches* and apply them to a source objects:
 
 ```javascript
 var transform = patch({
@@ -314,7 +156,8 @@ transform({
 < }
 ```
 
-Alternatively we can extract some helper functions to make things more explicit:
+Alternatively we can extract some helper functions, and split every edition to separate patch to make things more explicit.
+Then we can combine subsequent patches together using `_.flow()` function:
 
 ```javascript
 var addPhoneNumber = phone => patch({phone: _.concat(phone)});
@@ -328,6 +171,11 @@ var transform2 = _.flow([
     mostRecentCallOnly
 ]);
 ```
+
+<!--
+`_.mergeWith()` is great example of how customizers can be used to bend Lodash to
+Just with bunch of simple yet flexible building blocks and few lines of code you can build sophisticated constructs.
+-->
 
 # To-Do list implementation
 
