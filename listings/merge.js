@@ -11,10 +11,11 @@ var contact2 = {
 console.log(_.merge(concact1, contact2));
 
 // var concatArrays = _.cond([[_.isArray, _.concat]]);
-function concatArrays(a, b){
+function concatArrays(a, b, c){
+  console.log('merging', c);
   if(_.isArray(a)){
     return _.concat(a, b);
   }
 }
 
-console.log(_.mergeWith(concatArrays, concact1, contact2));
+console.log(_.mergeWith(console.log, concact1, contact2));

@@ -41,11 +41,16 @@ One form of such extension points are **Customizers**.
 
 ## Customizers
 
+<!--
 **Customizers** are similar to Object-Oriented [*Strategy pattern*](https://en.wikipedia.org/wiki/Strategy_pattern) from GoF Design Patterns book.
-You can vastly change object behavior by substituting one strategy to another.  
-<!--Before we jump to more complicated example lets explore `_.merge()` function.-->
+-->
+Object-Oriented programmers will recognize **Customizers** as [*Strategy pattern*](https://en.wikipedia.org/wiki/Strategy_pattern) from famous [*Design Patterns: Elements of Reusable Object-Oriented Software*](https://en.wikipedia.org/wiki/Design_Patterns) book by *The "Gang of Four"*.
+
+Customizers allow you to significantly change object behavior by substituting one strategy to another.  
+
 Let's have a look at how customizers works in practice.
-Suppose we have a partial contact information, that we would like to combine into one object:
+Suppose we have a partial contact information, that we would like to combine into one object.
+As you might expect Lodash already provides a function that does the job for us. `_.merge()` function merges two objects, property by property:
 ```javascript
 var contact1 = {
   name: 'Sherlock Holmes',
@@ -62,10 +67,13 @@ _.merge(concact1, concact2);
 <   phone: ['555-654-321']
 < }
 ```
-As you might expect `_.merge()` function does the job for us and merges two objects.
+
 However, if same property is present in both merged objects property value from last object wins.
 In our example it is unfortunate, as we loose information about one of the contact's phone number.
+
 Fortunately there is an alternative version of `_.merge()` that accepts an additional function which allows to customize a way in which properties are merged.
+This customization function is going to be invoked for every property (also nested properties) that should be merged (properties from the second merged object).
+Values of property to be merged will be passed as two first parameters.
 Let's give it a try:
 
 ```javascript
@@ -88,11 +96,9 @@ var customizer = _.cond([[_.isArray, _.concat]]);
 
 If one of merged properties points to an array then our customizer returns a new array that will include values from both merged objects.
 Notice that if merged value is not an array our customizer won't return any value (or to put it in another way - it will return `undefined`).
-In such case Lodash will fallback to default strategy.
-
+In such situation Lodash will fallback to default strategy.
 
 But why should we limit ourselves just to arrays concatenation?
-
 Here is how we can make our customizer even more generic:
 ```javascript
 function customizer(val, fn){
@@ -101,6 +107,9 @@ function customizer(val, fn){
   }
 }
 ```
+In this new version of customizer, if second of the merged objects contains any functions then instead of assigning those functions to resulting object, we
+simply invoke them passing as parameters values from matching property from the first merged object.
+
 Now we will fix this customizer to as a first parameter of `_.mergeWith()`. Let's call this resulting function `patch`:
 ```javascript
 var patch = recipe => _.mergeWith(customizer, _, recipe);
@@ -108,11 +117,12 @@ var patch = recipe => _.mergeWith(customizer, _, recipe);
 Remember that all `lodash/fp` functions are auto-curried, so we can pass them subset of parameters, as well as,
 parameter placeholders `_` and in result we will get new function with some of the parameters fixed.
 
-The resulting `patch()` is a higher-order function that returns new function that transforms objects based on provided *recipe*. Recipes are formulated in a pretty declarative way, by explicitly telling which function use to merge given property.
+The resulting `patch()` is a higher-order function that returns new function that transforms objects based on provided *recipe*.
+Recipes are formulated in a pretty declarative way, by explicitly telling which function use to merge given property.
 
 **Note**: order of parameters in `_.mergeWith(customizer, object, source)` is a little bit unfortunate, as accepts data (`object`) parameter as a second and not last parameter.
 If it would be the other way we could fully benefit from curring and define `patch` simply as `var patch = _.mergeWith(customizer)`.
-This order of parameters forced us to skip second of its parameter using `_`.
+However, actual order of parameters forced us to skip second of its parameter using `_`.
 Alternatively, we could re-arrange parameters like this:
 ```javascript
 var mergeWithRearg = _.rearg(_.mergeWith, [0, 2, 1]);
@@ -189,12 +199,12 @@ Let's enumerate all features of To-Do List supported by TodoMVC:
 6. remove single item.
 <!--7. show all/show active/show completed filter.-->
 
-We will go with one-by-one with this list, but first lets define how model of our To-Do list will look like:
+We will go one-by-one with this list, but first lets define how model of our To-Do list will look like:
 
 ```javascript
 var model = {
   items: [
-    { title: 'Implement To-Do list with Lodash', completed: false}
+    { title: 'Implement To-Do list with Lodash', completed: false }
   ]
 };
 ```
@@ -220,11 +230,11 @@ var completeAll = patch({
   items: forAll(complete)
 });
 ```
-We have also created an alias `forAll` for `_.map` function as it will be improve readability.
+We have also created an alias `forAll` for `_.map` function as it will improve readability.
 
 ## 3. Clear all completed items
 
-Now we jump to requirement number 6 as is it pretty similar to
+Removing completed items is very similar to previous listing. We have used `_.matches()` function to filter completed items.
 
 ```javascript
 var isCompleted = _.matches({
@@ -282,7 +292,7 @@ powN('4');
 < 'number expected!'
 ```
 I must say that this looks a little bit too extreme with `otherwise()`, and probably imperative version would look much more understandable. I leave reader with task (of rewriting this function) as an excercise.
-Fragment `otherwise(onlyIf(pow), _.isNumber), _.constant('number expected!')` is not much better. It doesn't read naturally. Definatelly it is less readable than `powN(n){ return _.isNumber(n) ? n * n : 'number expected!'}`. Maybe we went one bridge too far.
+Fragment `otherwise(onlyIf(pow), _.isNumber), _.constant('number expected!')` is not much better. It doesn't read naturally. Definitely it is less readable than `powN(n){ return _.isNumber(n) ? n * n : 'number expected!'}`. Maybe we went one bridge too far.
 But let's try one more trick. Let's assign both function to `Function.prototype` and pass original function as `this` parameter:
 ```javascript
 Function.prototype.onlyIf = function(condFn) {
@@ -300,7 +310,7 @@ powN('4');
 < 'number expected!'
 ```
 
-He had to switch from arrow notation (`() => {}`) to function expression, as arrow functions do not bind own `this` parameter.
+We had to switch from arrow notation (`() => {}`) to function expression, as arrow functions do not bind own `this` parameter.
 Now we can get back to our task. Toggling particular item.
 ```javascript
 var completeIf = (condFn) => patch({
@@ -349,7 +359,7 @@ var hasTitle = title => matches({
   title: title
 });
 var renameItem = (newTitle, oldTitle) => patch({
-  items: forAll(changeTitleTo(newTitle).onlyIf(hasTitle(oldTitle).otherwise(_.identity)))
+  items: forAll(changeTitleTo(newTitle).onlyIf(hasTitle(oldTitle)).otherwise(_.identity))
 });
 var removeItem = (title) => patch({
   items: removeIf(hasTitle(oldTitle))
@@ -438,10 +448,34 @@ var program = _.flow([
 ]);
 
 console.log(program({items: []}));
+
+<!--
+function renameItem(newTitle, oldTitle){
+  list.items.forEach(item => {
+    if(item.title.matches(oldTitle)){
+      item.title = newTitle;
+    }
+  });
+}
+-->
+
 ```
 
 You can also find full listing in my [Github repo](http://github.com/mpi/lodash-is-awesome/) or
 play around with it at this [JS Fiddle](https://jsfiddle.net/67bdchwg/1/).
 
 # Summary
-TBD
+
+In the article we have been investigating customization capabilities of Lodash library.
+As a result we have build a simple, yet powerful, *Domain-Specific Language* for declarative transformation of JSON objects in form of *patches*.
+Thanks to flexibility and extensibility of Lodash, we made it, by writing only few lines of code.
+
+In the end we were able to compose extremely simple function it to more sophisticated patches, that reads almost as natural language.
+
+Is this functional approach better/cleaner/fancier/name your own adjective here than classical imperative one?
+I leave it to the reader, to decide by his own.
+<!--I leave reader with this question, by his own to decide.-->
+Regardless of the answer it is however, definitely worth to be aware of all this cool Lodash customization features.
+
+In next article we will extend our example with user interface and build fully capable To-Do list application.
+Stay tuned.
