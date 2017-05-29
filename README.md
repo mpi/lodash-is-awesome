@@ -1,4 +1,4 @@
-# Lodash is Awesome!
+# Lodash is not (only) for list manipulation!
 
 In this article I would like to share with you my appreciation for one of my favorite Javascript library.
 This library is Lodash.
@@ -30,14 +30,12 @@ If you are not familiar with some of functions that are used in following exampl
 Moreover, in this article when I refer to *"Lodash"* I mean `lodash/fp` variant of Lodash.
 If you haven't heard about `lodash/fp`, higher-order functions or just need some refresh of your memory, please have a look at my previous article on [Higher-order functions in Lodash](HIGHER_ORDER_FUNCTIONS.md).
 
-## Lodash is not only for list manipulation
-
 <!--
 In the begining of article I asserted that Lodash is not only list manipulation library, so lets leave last example behind and move forward to something more interesting.
 -->
 
 One of the things I love in Lodash is that it is extremely flexible and adaptable.
-Event if you don't find function that you need, there is a high chance that you can build one with just a few lines of code.
+Even if you don't find function that you need, there is a high chance that you can build one with just a few lines of code.
 Author of Lodash placed throughout it's codebase hooks and extension points that allows further customizations.
 One form of such extension points are **Customizers**.
 
@@ -93,7 +91,7 @@ Notice that if merged value is not an array our customizer won't return any valu
 In such case Lodash will fallback to default strategy.
 
 
-But why should we limit ourselves just to arrays concatanation?
+But why should we limit ourselves just to arrays concatenation?
 
 Here is how we can make our customizer even more generic:
 ```javascript
@@ -113,7 +111,7 @@ parameter placeholders `_` and in result we will get new function with some of t
 The resulting `patch()` is a higher-order function that returns new function that transforms objects based on provided *recipe*. Recipes are formulated in a pretty declarative way, by explicitly telling which function use to merge given property.
 
 **Note**: order of parameters in `_.mergeWith(customizer, object, source)` is a little bit unfortunate, as accepts data (`object`) parameter as a second and not last parameter.
-If it would be the other way we could fully benefit from curring and define `patch` simply as `var patch = _.mergeWith(customier)`.
+If it would be the other way we could fully benefit from curring and define `patch` simply as `var patch = _.mergeWith(customizer)`.
 This order of parameters forced us to skip second of its parameter using `_`.
 Alternatively, we could re-arrange parameters like this:
 ```javascript
