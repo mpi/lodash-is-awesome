@@ -180,9 +180,28 @@ Entire Lodash library is full of higher-order functions. The most notable of the
 [`_.matches()`][matches], [`_.conforms()`][conforms], [`_.overSome()`][overSome], [`_.overEvery()`][overEvery],
 [`_.flow()`][flow].
 
-It is good to know about their existence, as they considerably reduce amount of code that has to be written.
+If you are using Lodash (or plan to use) on a daily basis it is good to be aware of their existence, as they considerably reduce amount of code that has to be written.
 Furthermore, they contribute to improvement of readability of code.
-Let's have a look at code that enumerates 5 countries with largest cities in the world.
+I wont go into details of describing each of those functions as [Lodash docs][docs] are excellent in this matter.
+I will make only one exception: `_.flow()`. Flow function is one of the most useful in library - it allows to compose new functions by chaining other functions one after another.
+Output (return value) of every subsequent function becomes an input for next function in sequence. It is similar to pipe (`|`) operator in Linux `bash`.
+From mathematical point of view it is a classical function composition:
+```javascript
+_.flow([f, g, h])(x) <=> f(g(h(x)))
+```
+Thanks to `_.flow()` it is easy to *assemble* new functions from existing ones:
+```javascript
+var sumAll = _.flow([_.concat, _.flattenDeep, _.sum]);
+_.sum(1, 2, [3, 4]);
+> 0
+sumAll(1, 2, [3, 4]);
+> 10
+```
+`_.flow()` is similar to [`_.chain()`][chain], however unlike `_.chain()`, which binds to data in very first invocation,
+result of `_.flow()` is a function that accepts data at the end.
+This implies it can be assigned to variable or passed as parameter, allowing it to be effectively reused for different data sets.
+
+Below you have code that enumerates 5 countries with largest cities in the world.
 I have used the ES 2015 arrow function notation for brevity:
 
 ```javascript
@@ -279,6 +298,7 @@ Understanding **higher-order functions**, especially `_.partial()` and `_.curry(
 In my upcoming article I will show that Lodash is not only list manipulation library.  
 I will show how higher-order functions and customizers can improve readability at the same time reducing number of lines of code.
 
+[docs]: https://lodash.com/docs/
 [toArray]: https://lodash.com/docs/#toArray
 [partial]: https://lodash.com/docs/#partial
 [curry]: https://lodash.com/docs/#curry
